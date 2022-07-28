@@ -1,6 +1,7 @@
 # my file
 /db_files/data/*
 /view/*.py
+/.qt_for_python/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

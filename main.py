@@ -1,3 +1,5 @@
+# TODO: 如果一天中的科目重複怎麼辦
+
 import sys
 from PyQt6 import QtWidgets, QtCore, QtGui
 from PyQt6.QtWidgets import QMessageBox, QPushButton, QLineEdit, QVBoxLayout, QCheckBox
@@ -33,12 +35,36 @@ class MainWindows(QtWidgets.QMainWindow):
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
 
-        self.btn_saveAndDelControl()
-        return super().closeEvent(a0)
+        try:
+            if self.today_iso not in self.sm.schedule:
+                raise ValueError("Please input today's agenda first")
+
+            self.btn_saveAndDelControl()
+            return super().closeEvent(a0)
+
+        except ValueError as e:
+            print(e)
+            QMessageBox.critical(
+                self,
+                "計畫錯誤",
+                "請先計畫今天科目",
+                QMessageBox.StandardButton.Ok,
+                QMessageBox.StandardButton.NoButton,
+            )
+            a0.ignore()
 
     def initView(self):
 
-        # view with agenda
+        # show before check agenda
+        self.lbl_date.setText("Day Now " + self.today_iso)
+        self.cb_n1.addItems(self.cm.subjects)
+        self.cb_n1.addItem("")
+        self.cb_n2.addItems(self.cm.subjects)
+        self.cb_n2.addItem("")
+        self.cb_n3.addItems(self.cm.subjects)
+        self.cb_n3.addItem("")
+
+        # view with agenda # TODO: code confusing
         if self.today_iso not in self.sm.schedule:
             self.lbl_warn.setText("Please add TODAY's agenda")
             raise Exception("Agenda not exist")
@@ -57,20 +83,17 @@ class MainWindows(QtWidgets.QMainWindow):
         else:
             self.lbl_warn.setText("Feel good today")
 
+        self.updateSubjectView()
+
+    def updateSubjectView(self):
+
         # view after agenda setting up
         self.lbl_n1.setText(self.sm.schedule[self.today_iso][0])
         self.lbl_n2.setText(self.sm.schedule[self.today_iso][1])
         self.lbl_n3.setText(self.sm.schedule[self.today_iso][2])
-        self.cb_n1.addItems(self.cm.subjects)
-        self.cb_n1.addItem("")
         self.cb_n1.setCurrentText(self.sm.schedule[self.today_iso][0])
-        self.cb_n2.addItems(self.cm.subjects)
-        self.cb_n2.addItem("")
         self.cb_n2.setCurrentText(self.sm.schedule[self.today_iso][1])
-        self.cb_n3.addItems(self.cm.subjects)
-        self.cb_n3.addItem("")
         self.cb_n3.setCurrentText(self.sm.schedule[self.today_iso][2])
-        self.lbl_date.setText("Day Now " + self.today_iso)
         self.resetCheckBoxLayout()
 
     def initBtn(self):
@@ -115,6 +138,8 @@ class MainWindows(QtWidgets.QMainWindow):
                     raise ValueError("Donot input empty string")
 
             self.sm.setSchedule(selected_date, agenda)
+            if selected_date.isoformat() == self.today_iso:
+                self.updateSubjectView()
 
         except ValueError as e:
             QMessageBox.critical(
@@ -122,7 +147,7 @@ class MainWindows(QtWidgets.QMainWindow):
                 "課目錯誤",
                 "科目不可空白",
                 QMessageBox.StandardButton.Ok,
-                QMessageBox.StandardButton.Close,
+                QMessageBox.StandardButton.NoButton,
             )
 
     def btn_add(self, sub_index, le: QLineEdit):
@@ -151,7 +176,7 @@ class MainWindows(QtWidgets.QMainWindow):
                 "備忘錄錯誤",
                 text,
                 QMessageBox.StandardButton.Ok,
-                QMessageBox.StandardButton.Close,
+                QMessageBox.StandardButton.NoButton,
             )
 
         except KeyError as e:
@@ -182,7 +207,7 @@ class MainWindows(QtWidgets.QMainWindow):
             font.setPointSize(10)
             tmp_checkbox.setFont(font)
             tmp_checkbox.setText(r)
-            holder.append(tmp_checkbox) # TODO: error here, seems as holder is a local var # TODO: make everything simple to use
+            holder.append(tmp_checkbox) # TODO: make everything simple to use
             vl.addWidget(holder[-1])
 
         # print("self.holder_1:", self.checkBox_holder[0])

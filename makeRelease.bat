@@ -1,0 +1,1 @@
+pyinstaller -D ./main.py --add-data "./view/main.ui;./view/" --add-data "./db_files/config/;./db_files/config/"
